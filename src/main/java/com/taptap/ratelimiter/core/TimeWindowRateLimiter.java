@@ -7,12 +7,10 @@ import org.redisson.api.RScript;
 import org.redisson.api.RScript.ReturnType;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.LongCodec;
-import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.Collections;
 import java.util.List;
 
-import static com.taptap.ratelimiter.configuration.RateLimiterAutoConfiguration.REDISSON_BEAN_NAME;
 
 /**
  * @author kl (http://kailing.pub)
@@ -22,7 +20,7 @@ public class TimeWindowRateLimiter implements RateLimiter {
 
     private final RScript rScript;
 
-    public TimeWindowRateLimiter(@Qualifier(REDISSON_BEAN_NAME) RedissonClient client) {
+    public TimeWindowRateLimiter(RedissonClient client) {
         this.rScript = client.getScript(LongCodec.INSTANCE);
     }
 

@@ -36,7 +36,6 @@ import java.util.List;
  */
 public class RuleProvider implements BeanFactoryAware {
 
-
     private static final Logger logger = LoggerFactory.getLogger(RuleProvider.class);
 
     private final ParameterNameDiscoverer nameDiscoverer = new DefaultParameterNameDiscoverer();
@@ -134,10 +133,11 @@ public class RuleProvider implements BeanFactoryAware {
 
     /**
      * 获取基础的限流 key
+     * @param signature
+     * @return
      */
     private String getKey(MethodSignature signature) {
         return String.format("%s.%s", signature.getDeclaringTypeName(), signature.getMethod().getName());
-
     }
 
     Rule getRateLimiterRule(JoinPoint joinPoint, RateLimit rateLimit) {
@@ -166,8 +166,11 @@ public class RuleProvider implements BeanFactoryAware {
 
     /**
      * 执行自定义函数
+     * @param fallbackName 回调函数
+     * @param joinPoint 切入点
+     * @return 函数执行的结果
      */
-    public Object executeFunction(String fallbackName, JoinPoint joinPoint) throws Throwable {
+    public Object executeFunction(String fallbackName, JoinPoint joinPoint){
         // prepare invocation context
         Method currentMethod = ((MethodSignature) joinPoint.getSignature()).getMethod();
         Object target = joinPoint.getTarget();
@@ -181,16 +184,13 @@ public class RuleProvider implements BeanFactoryAware {
         Object[] args = joinPoint.getArgs();
 
         // invoke
-        Object res;
         try {
-            res = handleMethod.invoke(target, args);
+            return handleMethod.invoke(target, args);
         } catch (IllegalAccessException e) {
-            throw new ExecuteFunctionException("Fail to invoke custom lock timeout handler: " + fallbackName, e);
+            throw new ExecuteFunctionException("Fail to access custom lock timeout handler: " + fallbackName, e);
         } catch (InvocationTargetException e) {
-            throw e.getTargetException();
+            throw new ExecuteFunctionException("Fail to invoke custom lock timeout handler: " + fallbackName, e);
         }
-
-        return res;
     }
 
 }

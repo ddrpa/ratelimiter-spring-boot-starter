@@ -29,36 +29,14 @@ import org.springframework.context.annotation.Import;
 @Import({RateLimitAspectHandler.class, RateLimitExceptionHandler.class})
 public class RateLimiterAutoConfiguration {
 
-    private final RateLimiterProperties limiterProperties;
-    public final static String REDISSON_BEAN_NAME = "rateLimiterRedissonBeanName";
-
-    public RateLimiterAutoConfiguration(RateLimiterProperties limiterProperties) {
-        this.limiterProperties = limiterProperties;
-    }
-
-    @Bean(name = REDISSON_BEAN_NAME, destroyMethod = "shutdown")
-    RedissonClient redisson() {
-        Config config = new Config();
-        if (limiterProperties.getRedisClusterServer() != null) {
-            config.useClusterServers().setPassword(limiterProperties.getRedisPassword())
-                    .addNodeAddress(limiterProperties.getRedisClusterServer().getNodeAddresses());
-        } else {
-            config.useSingleServer().setAddress(limiterProperties.getRedisAddress())
-                    .setDatabase(limiterProperties.getRedisDatabase())
-                    .setPassword(limiterProperties.getRedisPassword());
-        }
-        config.setEventLoopGroup(new NioEventLoopGroup());
-        return Redisson.create(config);
-    }
-
     @Bean
     public RuleProvider bizKeyProvider() {
         return new RuleProvider();
     }
 
     @Bean
-    public RateLimiterService rateLimiterInfoProvider() {
-        return new RateLimiterService(redisson());
+    public RateLimiterService rateLimiterInfoProvider(RedissonClient redissonClient) {
+        return new RateLimiterService(redissonClient);
     }
 
 }
